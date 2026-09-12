@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Does ESG Pay? — an empirical answer</title>
+<meta name="description" content="Do high-ESG-rated stocks earn more? A quintile-sort analysis of 160 firms over 108 months, with sector neutralisation, clustered regressions and a risk decomposition." />
+<link rel="stylesheet" href="/static/styles.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>" />
+</head>
+<body>
+<div class="watermark" id="watermark">DEMO DATA — SYNTHETIC PANEL</div>
+
+<header class="masthead">
+  <div class="mast-left">
+    <div class="eyebrow">
+      <span class="dot"></span>
+      <span id="m-universe">loading…</span>
+    </div>
+    <h1>Does a high ESG score <em>pay</em>?</h1>
+    <p class="lede" id="m-oneliner">—</p>
+    <div class="mast-actions">
+      <button class="btn btn-primary" id="btn-pitch">60-second version</button>
+      <a class="btn" href="/docs">Written memo</a>
+      <a class="btn" href="/data/panel.csv" download>Panel CSV</a>
+      <label class="btn btn-ghost" for="file">Load your own data
+        <input type="file" id="file" accept=".csv,text/csv" hidden />
+      </label>
+      <span id="upload-state" class="upload-state"></span>
+    </div>
+  </div>
+  <aside class="mast-right">
+    <div class="verdict-card">
+      <div class="vc-kicker">Verdict, on this data</div>
+      <div class="vc-score" id="m-headline">—</div>
+      <div class="vc-sub" id="m-headline-sub">—</div>
+      <div class="vc-foot" id="m-built">—</div>
+    </div>
+  </aside>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="answers" class="on">The four answers</button>
+  <button data-tab="returns">Returns</button>
+  <button data-tab="sector">The sector trick</button>
+  <button data-tab="risk">Risk</button>
+  <button data-tab="regression">Regressions</button>
+  <button data-tab="method">Method &amp; limits</button>
+  <button data-tab="data">Data</button>
+</nav>
+
+<main>
+  <!-- ---------------------------------------------------------------- answers -->
+  <section class="panel on" id="tab-answers">
+    <div class="answers" id="answers"></div>
+    <div class="chart-grid two">
+      <figure class="chart-embed"><div id="svg-quintile_bars"></div></figure>
+      <figure class="chart-embed"><div id="svg-risk_profile"></div></figure>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------------- returns -->
+  <section class="panel" id="tab-returns">
+    <div class="two-col">
+      <div>
+        <h2>The spread, if you take the score at face value</h2>
+        <p class="body" id="returns-lede">—</p>
+        <table class="tbl" id="tbl-returns"></table>
+      </div>
+      <div class="side">
+        <div class="callout" id="returns-callout"></div>
+        <div class="control-card">
+          <div class="cc-title">Interactive chart</div>
+          <div class="cc-row"><label>Series</label>
+            <div class="chips" id="cum-chips"></div>
+          </div>
+          <div class="cc-row"><label>View</label>
+            <div class="seg" id="cum-view">
+              <button class="on" data-v="cum">Growth of 100</button>
+              <button data-v="spread">Cumulative spread</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <figure class="chart-embed wide"><div id="chart-cum"></div><figcaption id="cum-cap"></figcaption></figure>
+
+    <h2>Is it working <em>right now</em>?</h2>
+    <p class="body">Rolling 3-year sector-neutral spread. A single bar of this chart is what a
+      fund's whole ESG tilt was worth to a client who bought at that moment and held three years.</p>
+    <figure class="chart-embed wide"><div id="chart-rolling"></div></figure>
+
+    <h2>Year by year</h2>
+    <p class="body">Both lines are the same portfolios. The only difference is whether you subtract
+      what the sector did.</p>
+    <figure class="chart-embed wide"><div id="svg-year_gap"></div></figure>
+    <table class="tbl" id="tbl-years"></table>
+  </section>
+
+  <!-- ---------------------------------------------------------------- sector -->
+  <section class="panel" id="tab-sector">
+    <div class="two-col">
+      <div>
+        <h2>The most misleading chart in sustainable finance</h2>
+        <p class="body" id="sector-lede">—</p>
+        <div class="attrib-controls">
+          <label>Year of the decomposition
+            <select id="attrib-year"></select>
+          </label>
+        </div>
+        <figure class="chart-embed"><div id="chart-attrib"></div></figure>
+        <table class="tbl" id="tbl-attrib"></table>
+      </div>
+      <div class="side">
+        <div class="callout warn" id="sector-callout"></div>
+        <div class="def-card">
+          <div class="dc-title">How to read it</div>
+          <p>Each row is one sector. The <span class="sw" style="background:#b4453c"></span> bar is how much
+            the <em>weight difference</em> between the top and bottom quintile contributed — i.e. simply
+            holding more of a sector that had a big year. The <span class="sw" style="background:#5f8fb3"></span>
+            bar is stock-picking <em>inside</em> a sector. They sum to the headline spread.</p>
+        </div>
+        <div class="control-card">
+          <div class="cc-title">Sector mix of the quintiles</div>
+          <div class="cc-row"><label>Show year</label>
+            <div class="seg" id="mix-mode">
+              <button class="on" data-v="last">Latest</button>
+              <button data-v="all">Whole sample</button>
+            </div>
+          </div>
+        </div>
+        <figure class="chart-embed tight"><div id="svg-sector_mix"></div></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------------- risk -->
+  <section class="panel" id="tab-risk">
+    <div class="two-col">
+      <div>
+        <h2>Where the signal actually is</h2>
+        <p class="body">If you are going to charge a client for an ESG screen, this is the chart you show them —
+          not the return chart.</p>
+        <table class="tbl" id="tbl-risk"></table>
+        <div class="def-card">
+          <div class="dc-title">Downside capture, defined</div>
+          <p id="risk-note">—</p>
+        </div>
+      </div>
+      <div class="side">
+        <div class="callout pos" id="risk-callout"></div>
+        <figure class="chart-embed tight"><div id="svg-risk_profile"></div></figure>
+      </div>
+    </div>
+    <h2>Drawdown paths</h2>
+    <p class="body">Percent below the running peak. Depth matters, but so does the shape — a shallower
+      trough that recovers faster is worth materially more to a client who might redeems.</p>
+    <figure class="chart-embed wide"><div id="svg-drawdown"></div></figure>
+    <div class="chart-grid two">
+      <figure class="chart-embed"><div id="chart-volsort"></div><figcaption>Realised volatility by ESG quintile (interactive — hover a bar)</figcaption></figure>
+      <figure class="chart-embed"><div id="chart-capture"></div><figcaption>Upside vs downside capture</figcaption></figure>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------- regression -->
+  <section class="panel" id="tab-regression">
+    <h2>Four specifications, one conclusion</h2>
+    <p class="body">Returns are monthly, in percent. Every model includes year fixed effects and standard
+      errors clustered by firm — the same firm appears ~95 times, so ordinary errors would make everything
+      look significant.</p>
+    <figure class="chart-embed wide"><div id="svg-forest"></div></figure>
+    <div id="reg-specs"></div>
+    <h2>Do high-ESG firms look different as businesses?</h2>
+    <p class="body">Firm-level averages over the whole sample — one point per firm, so no clustering issue.
+      If the operating differences are near zero but the <em>market</em> differences are not, the story is
+      about investor beliefs, not about cash flows.</p>
+    <div class="chart-grid two">
+      <div><table class="tbl" id="tbl-ops"></table></div>
+      <div><table class="tbl" id="tbl-opstests"></table></div>
+    </div>
+  </section>
+
+  <!-- ----------------------------------------------------------------- method -->
+  <section class="panel" id="tab-method">
+    <div class="two-col">
+      <div>
+        <h2>Method, in eight steps</h2>
+        <ol class="steps" id="method-steps"></ol>
+        <h2>The three limitations that matter</h2>
+        <div id="limits"></div>
+      </div>
+      <div class="side">
+        <div class="def-card">
+          <div class="dc-title">Definitions, pinned down</div>
+          <dl id="defs"></dl>
+        </div>
+        <div class="def-card">
+          <div class="dc-title">What this project is not</div>
+          <p>It is not a claim about the real world. It is a working analysis pipeline whose conclusions
+             are produced by the data you give it. The demo panel is synthetic and labelled as such in
+             every view. The moment you load MSCI or ESG-Book scores with real prices, the verdict text
+             above regenerates — it is computed, never hard-coded.</p>
+        </div>
+        <div class="def-card" id="falsify-card"></div>
+        <div class="def-card">
+          <div class="dc-title">Try it: break the result on purpose</div>
+          <p>Every conclusion here follows from three assumed coefficients. Re-run the generator with them
+             zeroed and the dashboard flips to "nothing to see":</p>
+          <pre>python -m environ.data.generate_data \
+  --level-bp 0 --momentum-bp 0 --level-vol-pct 0</pre>
+          <p class="tiny">This is the test I would apply to any ESG study in a pitch. Almost nobody publishes it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------------- data -->
+  <section class="panel" id="tab-data">
+    <div class="two-col">
+      <div>
+        <h2>Column contract</h2>
+        <p class="body">Upload a CSV with these columns — one row per firm per month — and every number on
+          this page, including the verdict sentences, is recomputed. No code changes.</p>
+        <table class="tbl" id="tbl-schema"></table>
+        <div class="def-card">
+          <div class="dc-title">Getting real data, free</div>
+          <ol class="steps">
+            <li><b>Ratings:</b> <a href="https://huggingface.co/datasets/ESG-Book/esg" target="_blank" rel="noreferrer">ESG-Book</a>
+              publishes quarterly ESG scores for 4,000+ firms with a permissive licence. Export the quarterly
+              panel to CSV.</li>
+            <li><b>Prices:</b> <code>pip install yfinance</code>, then download monthly adjusted closes for the
+              tickers in your ratings file, 2016-01 to the present.</li>
+            <li><b>Sectors:</b> take GICS from the ratings file, or map tickers to a sector using the S&amp;P
+              classification published by each index provider.</li>
+            <li><b>Build:</b> <code>python -m environ.data.build_real_panel --ratings … --prices …</code>
+              computes z-scores, the 12-month momentum column and the neutralisation inputs for you.</li>
+          </ol>
+          <p class="tiny">If a step is unavailable, the analysis runs on whatever subset you have — the loader
+            reports which columns it derived and which it had to skip.</p>
+        </div>
+      </div>
+      <div class="side">
+        <div class="callout warn" id="prov-card"></div>
+        <div class="def-card" id="assumed-card"></div>
+        <div class="def-card" id="noise-card"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="pitch" hidden>
+  <div class="modal-box">
+    <button class="modal-close" id="pitch-x">×</button>
+    <div class="eyebrow"><span class="dot"></span>Interview script</div>
+    <h3>The 60-second version</h3>
+    <div id="pitch-body"></div>
+    <div class="pitch-foot">
+      <button class="btn" id="pitch-copy">Copy as text</button>
+      <span class="tiny">Say it out loud three times and it stops sounding like a script.</span>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <span>Built with Python, FastAPI and hand-written SVG — no charting library, no CDN, no build step.</span>
+  <span id="foot-rows"></span>
+</footer>
+
+<script src="/static/charts.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
