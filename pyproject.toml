@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "environ"
+version = "1.0.0"
+description = "Does a high ESG score pay? - ESG/returns analysis app, memo and deck, generated from one pipeline"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "MBA candidate project" }]
+keywords = ["esg", "asset-management", "factor-investing", "python", "fastapi"]
+dependencies = [
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "scipy>=1.10",
+  "fastapi>=0.100",
+  "uvicorn[standard]>=0.23",
+  "python-multipart>=0.0.6",
+]
+
+[project.optional-dependencies]
+# figures and the generated memo/deck
+docs = ["matplotlib>=3.7"]
+# the yfinance path in data/build_real_panel.py; ratings come from a CSV download
+real = ["yfinance>=0.2.31"]
+dev = ["pytest>=7.4", "matplotlib>=3.7"]
+
+[project.scripts]
+environ = "environ.app:run"
+
+[tool.setuptools.packages.find]
+include = ["environ*"]
+
+[tool.setuptools.package-data]
+environ = ["web/*.html", "web/static/*", "data/*.csv", "docs/*.md", "docs/*.html", "docs/figures/*.png"]
+
+[tool.pytest.ini_options]
+testpaths = ["environ/tests"]
+filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning"]
